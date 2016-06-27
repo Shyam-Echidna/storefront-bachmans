@@ -214,11 +214,10 @@ function BaseController($scope, $timeout, $window, BaseService, $state, LoginSer
 
     var vm = this;
 	vm.currentPath = $location.path();
-  vm.alf_ticket = ticket;
 	$scope.is = function(name){
 	   return $state.is(name);
 	}
-
+  vm.alf_ticket = ticket;
 	//console.log('asdfghj',minicartData);
 	vm.currentOrder = BaseService.MinicartData();
 	console.log(vm.currentOrder);
