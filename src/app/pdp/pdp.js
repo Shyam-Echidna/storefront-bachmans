@@ -17,10 +17,12 @@ function PdpConfig( $stateProvider ) {
 			resolve: {
 				productDetail: function(PlpService, PdpService, $q, $stateParams, $http, OrderCloud){
 						var filter ={"xp.sequencenumber":$stateParams.sequence};
-					    return OrderCloud.Me.ListProducts(null, 1, 100, null, null, filter, null).then(function(res){
-				     	console.log('Product response data',res);
-				     	return res;
-				     })
+					    // return OrderCloud.Me.ListProducts(null, 1, 100, null, null, filter, null).then(function(res){
+				     // 	console.log('Product response data',res);
+				     // 	return res;
+				     return PdpService.GetSeqProd($stateParams.sequence).then(function(res){
+			           return res;
+			          });
 				},
 				productImages : function(PdpService, $stateParams, $q, $http){
 					return PdpService.GetProductCodeImages($stateParams.prodId);
@@ -35,20 +37,41 @@ function PdpConfig( $stateProvider ) {
 }
 
 
-function PdpService( $q, Underscore, OrderCloud, CurrentOrder, $http, $uibModal, x2js) {
+function PdpService( $q, Underscore, OrderCloud, CurrentOrder, $http, $uibModal, x2js, alfrescourl, alfcontenturl) {
 	var service = {
 		 AddToWishList : _addToWishList,
 		 CreateOrder: _createOrder,
 		 addressValidation: _addressValidation,
 		 GetProductCodeImages: _getProductCodeImages,
-		 GetHelpAndPromo:_getHelpAndPromo
+		 GetHelpAndPromo:_getHelpAndPromo,
+		 GetSeqProd :_getSeqProd
 	};
+	 function _getSeqProd(sequence){
+   var defferred = $q.defer(); 
+  $http({
+                method: 'GET',
+                dataType:"json",
+                url:"https://api.ordercloud.io/v1/me/products?xp.sequencenumber="+sequence,
+               
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + OrderCloud.Auth.ReadToken()
+                }
+
+             }).success(function (data, status, headers, config) { 
+                 
+                 defferred.resolve(data);
+             }).error(function (data, status, headers, config) {
+             });
+             return defferred.promise;
+
+ }
 
 	function _getProductCodeImages(prodCode){
 		var deferred = $q.defer();
 		var ticket = localStorage.getItem("alf_ticket");
 		var productVarientImages = [];
-		 $http.get("http://192.168.97.27:8080/alfresco/service/api/search/keyword.atom?q="+prodCode+"&alf_ticket="+ticket).then(function(res){
+		 $http.get(alfcontenturl+"api/search/keyword.atom?q="+prodCode+"&alf_ticket="+ticket).then(function(res){
 			var x2js = new X2JS();
 			var data = x2js.xml_str2json(res.data);
 			angular.forEach(data.feed.entry, function(value, key){
@@ -117,6 +140,7 @@ function PdpService( $q, Underscore, OrderCloud, CurrentOrder, $http, $uibModal,
 			}
 			LineItems.Create(orderId,lineItem).then(function(res){
 				console.log(res);
+				//$rootScope.$broadcast('LineItemAddedToCart', orderId, res);
 				return $rootScope.$broadcast('LineItemAddedToCart', orderId, res);
 			})
 		},function(){
@@ -160,7 +184,7 @@ function PdpService( $q, Underscore, OrderCloud, CurrentOrder, $http, $uibModal,
 	return service;
 }
 
-function PdpController( $uibModal, $q, Underscore, OrderCloud,  $stateParams, PlpService, productDetail, CurrentOrder,$rootScope, $scope, PdpService, productImages, selectedProduct) {
+function PdpController( $uibModal, $q, Underscore, OrderCloud,  $stateParams, PlpService, productDetail,alfcontenturl,$sce, CurrentOrder,$rootScope, $scope, PdpService, productImages, selectedProduct) {
 	var vm = this;
 	vm.selectedSizeIndex = 0;  // stores selected size index from vm.productDetails
 	vm.selectedProductIndex = 0; // stores selected product index under size array from vm.productDetails     	
@@ -191,6 +215,7 @@ function PdpController( $uibModal, $q, Underscore, OrderCloud,  $stateParams, Pl
 	vm.selectVarients = function(selectedSize){
 		vm.sizeGroupedProducts = sizeGroupedProducts[selectedSize];
 		console.log('Selected size prod', vm.sizeGroupedProducts);
+		//$('body').find('.detail-container .prod_title').text(vm.sizeGroupedProducts[0].Name);
 		PdpService.GetProductCodeImages(sizeGroupedProducts[selectedSize][vm.selectedProductIndex].ID).then(function(res){
 		vm.productVarientImages = res;
 		var owl2 = angular.element("#owl-carousel-pdp-banner");   
@@ -221,6 +246,12 @@ function PdpController( $uibModal, $q, Underscore, OrderCloud,  $stateParams, Pl
     // function to add active class for radio box
 	vm.sizeBoxItemClicked = function ($index) {
 		vm.selectedSizeIndex = $index;
+		// pdp image min height -start
+		 var pdpDetailBoxHt = $('.detail-overlay-box ').height();
+		  //alert(pdpDetailBoxHt);
+		  $('.pdp-banner-top').css('min-height',pdpDetailBoxHt);
+
+		  // pdp image min height -end
 	}
 
 	// function to retrieve images for selected size and color
@@ -230,6 +261,12 @@ function PdpController( $uibModal, $q, Underscore, OrderCloud,  $stateParams, Pl
         $($event.target).parents('.product-box').find('.Price').text('$'+prod.StandardPriceSchedule.PriceBreaks[0].Price);
 		PdpService.GetProductCodeImages(prod.ID).then(function(res){
 		vm.productVarientImages = res;
+		// pdp image min height -start
+		  var pdpDetailBoxHt = $('.detail-overlay-box ').height();
+		  //alert(pdpDetailBoxHt);
+		  $('.pdp-banner-top').css('min-height',pdpDetailBoxHt);
+
+		  // pdp image min height -end
 		var owl2 = angular.element("#owl-carousel-pdp-banner");   
 		owl2.trigger('destroy.owl.carousel');
 		setTimeout(function(){
@@ -352,7 +389,7 @@ function PdpController( $uibModal, $q, Underscore, OrderCloud,  $stateParams, Pl
 		animateOut: 'fadeOut'
 
 	});
-	$('#owl-carousel-pdp-banner .owl-item img').css({'width':'60%','padding-right': '30px'});
+	//$('#owl-carousel-pdp-banner .owl-item img').css({'width':'60%','padding-right': '30px'});
 	},500);
 
 
@@ -466,11 +503,10 @@ $('a.btn-circle-micro').on('click',
     	//alert('sss');
         $(this).parent().siblings('li').removeClass('clr-circle-outer').end().addClass('clr-circle-outer');
 });
-
+var ticket = localStorage.getItem("alf_ticket");
  PdpService.GetHelpAndPromo(ticket).then(function(res){
     vm.leftPromo = alfcontenturl+res.items[3].contentUrl+"?alf_ticket="+ticket;  
-  }); 
-
+  });
 }
 
 function MultipleReceipentController($uibModal,BaseService, $scope, $stateParams, $uibModalInstance, items, $rootScope, OrderCloud, CurrentOrder, LineItemHelpers, PdpService) {
@@ -759,4 +795,3 @@ function addedToCartController($scope, $uibModalInstance) {
         $uibModalInstance.dismiss('cancel');
     };
 }
-
