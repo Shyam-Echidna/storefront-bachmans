@@ -89,28 +89,6 @@ function LoginController( OrderCloud,$state, $stateParams, $exceptionHandler, Lo
     vm.setForm = function(form) {
         vm.form = form;
     };
-
-
-    // START: function for sort options selection
-      var sortItems=[
-      {'value':'What was your high school mascot?','label':'What was your high school mascot?'},
-      {'value':'In what city were you born?','label':'In what city were you born?'},
-      {'value':'What is the make or model of your first car?','label':'What is the make or model of your first car?'},
-      {'value':'What is the name of your favorite teacher?','label':'What is the name of your favorite teacher?'},
-      {'value':'What is your maternal grandmother’s first name?','label':'What is your maternal grandmother’s first name?'},
-      {'value':'What is your favorite game?','label':'What is your favorite game?'},
-      ];
-      vm.sortItems = sortItems;
-      vm.selectedItem ="What was your high school mascot?";
-      vm.selectedMenu = 0; 
-
-      vm.changeSortSelection = function changeSortSelection(selcetedItem, itemIndex){
-         vm.selectedItem =selcetedItem;
-         vm.selectedMenu = itemIndex; 
-
-      };
-      // END: function for sort options selection
-    
     vm.submit = function() {
         OrderCloud.Auth.GetToken( vm.credentials )
             .then(function(data) {
@@ -125,11 +103,8 @@ function LoginController( OrderCloud,$state, $stateParams, $exceptionHandler, Lo
                 })
             })
             .catch(function(ex) {
-               // $exceptionHandler(ex);
-               vm.errormsg = "Email or Password is incorrect!!";
-               vm.invaliduser = true;
+                $exceptionHandler(ex);
             })
-            $('#info-bar-acc, .sticky #info-bar-acc').addClass('expandAccBlockLoggedIn');
     };
 
     var specialKeys = new Array();
@@ -218,7 +193,6 @@ function LoginController( OrderCloud,$state, $stateParams, $exceptionHandler, Lo
        //vm.newUser=Users;
        //vm.newUser={};
         //console.log(vm.newUser);
-
         var user = {
 
                   Username: vm.newUser.Email,
@@ -247,8 +221,6 @@ function LoginController( OrderCloud,$state, $stateParams, $exceptionHandler, Lo
         function(data){
             console.log(data);
         })
-        
-         $('#info-bar-acc, .sticky #info-bar-acc').addClass('expandAccBlockSignedIn');
 
     };
         
