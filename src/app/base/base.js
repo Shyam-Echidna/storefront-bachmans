@@ -59,14 +59,14 @@ function BaseConfig( $stateProvider ) {
                      localStorage.setItem("alf_ticket",ticket);
                         return ticket;
                 })
-                },ticketTemp: function(LoginFact){
+                },/*ticketTemp: function(LoginFact){
                     return LoginFact.GetTemp().then(function(data){
                     console.log(data);           
                     var ticket = data.data.ticket;
                      localStorage.setItem("alfTemp_ticket",ticket);
                         return ticket;
                 })
-                },
+                }*/
             categoryImages: function(CategoryService, ticket){
            // var ticket = localStorage.getItem("alf_ticket");
             return CategoryService.GetCategoryImages(ticket).then(function(res){
@@ -214,6 +214,7 @@ function BaseController($scope, $timeout, $window, BaseService, $state, LoginSer
 
     var vm = this;
 	vm.currentPath = $location.path();
+  vm.alf_ticket = ticket;
 	$scope.is = function(name){
 	   return $state.is(name);
 	}
@@ -313,7 +314,7 @@ function BaseController($scope, $timeout, $window, BaseService, $state, LoginSer
           window.onmousewheel = document.onmousewheel = preventDefault; // older browsers, IE
           window.ontouchmove  = preventDefault; // mobile
           document.onkeydown  = preventDefaultForScrollKeys;
-			angular.element('.breadcrumb-box').css('display','none');
+			//angular.element('.breadcrumb-box').css('display','none');
         }
 
         function enableScroll() {
@@ -323,7 +324,7 @@ function BaseController($scope, $timeout, $window, BaseService, $state, LoginSer
             window.onwheel = null; 
             window.ontouchmove = null;  
             document.onkeydown = null;  
-			angular.element('.breadcrumb-box').css('display','block');
+			//angular.element('.breadcrumb-box').css('display','block');
         }
 
         function bodyScrollHide() {
@@ -1010,6 +1011,7 @@ LoginFact.GetContactInfo(ticket).then(function(res){
 	vm.hideShowMenuArrow = function(){
 		setTimeout(function(){
 			var contToHideShow=$('.menu-hover-cont3-inner');
+      $('.menu-hover-cont2.menu-container').addClass('thisIsHovered');
 			if(contToHideShow.scrollWidth>contToHideShow.offsetWidth){
 			    $('.menuScrollCont-arrow').css('display','block');
 			}else{
@@ -1018,13 +1020,19 @@ LoginFact.GetContactInfo(ticket).then(function(res){
 		},200)
 	}
 
+  vm.thisHoveredOut = function(){
+    setTimeout(function(){
+      $('.menu-hover-cont2.menu-container').removeClass('thisIsHovered');
+    },200)
+  }
+
 }
 
 
 function BaseTopController(LoginFact, BaseService, $uibModal, $rootScope, LoginService, $state, OrderCloud, alfcontenturl) {
     var vm = this;
      $rootScope.$on('getcurrentuser', function() {
-        alert(100);
+        //alert(100);
 
          LoginService.GetCurrentUser().then(function(res){
                     console.log(res);
@@ -1441,6 +1449,7 @@ function scrollDirective($window) {
 	    }
 	};
 }
+
 
 function phoneValidationDirective($parse){
 
